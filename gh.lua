@@ -2946,6 +2946,14 @@ do
                 -- Harvest everything that's ready
                 local harvested = harvestBatch(batchUuids, bare)
 
+                -- Check inventory and sell if near capacity
+                local cap = getInventoryCap()
+                if countInventory() >= math.max(cap - 1, 1) then
+                    setStatus(string.format("Inventory at %d/%d — selling after batch harvest...", countInventory(), cap), "Info")
+                    doSell()
+                    task.wait(1)
+                end
+
                 task.wait(1.5)  -- server despawn settle
 
                 -- Re-fetch progress and update bar
@@ -3000,6 +3008,15 @@ do
 
             for _, entry in ipairs(toHarvest) do
                 if questCancel then break end
+
+                -- Check inventory capacity before harvesting
+                local cap = getInventoryCap()
+                if countInventory() >= math.max(cap - 1, 1) then
+                    setStatus(string.format("Inventory at %d/%d — selling before continuing harvest...", countInventory(), cap), "Info")
+                    doSell()
+                    task.wait(1)
+                end
+
                 setStatus(string.format("Harvesting %s...", targetItem), "Info")
                 local confirmed = harvestOneEntry(entry)
                 local k = entry.treeUuid .. "_" .. tostring(entry.anchorIndex)
